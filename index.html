@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>手土産帖</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;600;700&family=Noto+Sans+JP:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:      #1e1a16;
+      --paper:    #f7f3ee;
+      --muted:    #8c7f72;
+      --accent:   #b85c38;
+      --gold:     #c9a84c;
+      --card-bg:  #ffffff;
+      --border:   #e2d9ce;
+      --radius:   12px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Noto Sans JP', sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    /* ── ヘッダー ── */
+    header {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 28px 24px 22px;
+      text-align: center;
+      letter-spacing: .08em;
+    }
+    header h1 {
+      font-family: 'Noto Serif JP', serif;
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 4px;
+    }
+    header p {
+      font-size: .8rem;
+      color: #aaa;
+      letter-spacing: .12em;
+    }
+
+    /* ── フィルター ── */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      padding: 16px 20px;
+      background: var(--ink);
+      border-top: 1px solid #333;
+    }
+    .toolbar select, .toolbar input {
+      background: #2c2820;
+      color: var(--paper);
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: .85rem;
+      font-family: inherit;
+      min-width: 140px;
+    }
+    .toolbar label {
+      color: #aaa;
+      font-size: .8rem;
+    }
+    #count {
+      margin-left: auto;
+      color: var(--gold);
+      font-size: .8rem;
+      font-family: 'Noto Serif JP', serif;
+    }
+
+    /* ── グリッド ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 16px 60px;
+    }
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    /* ── カード ── */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow .2s, transform .2s;
+    }
+    .card:hover {
+      box-shadow: 0 8px 28px rgba(0,0,0,.12);
+      transform: translateY(-3px);
+    }
+    .card-img {
+      width: 100%;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      background: #ede8e1;
+    }
+    .card-img-placeholder {
+      width: 100%;
+      aspect-ratio: 4/3;
+      background: #ede8e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+    }
+    .card-body {
+      padding: 14px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .card-shop {
+      font-size: .75rem;
+      color: var(--muted);
+      letter-spacing: .06em;
+    }
+    .card-name {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+    .card-price {
+      font-size: .85rem;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .card-use {
+      font-size: .75rem;
+      background: #f0ebe4;
+      color: var(--muted);
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      width: fit-content;
+    }
+
+    /* 総合スコア */
+    .score-main {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .score-num {
+      font-family: 'Noto Serif JP', serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .score-max {
+      font-size: .75rem;
+      color: var(--muted);
+    }
+    .stars {
+      color: var(--gold);
+      font-size: .95rem;
+      letter-spacing: 2px;
+    }
+
+    /* サブスコア */
+    .sub-scores {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 12px;
+      font-size: .78rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+    .sub-item {
+      display: flex;
+      justify-content: space-between;
+    }
+    .sub-val {
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    /* コメント */
+    .comment {
+      font-size: .82rem;
+      color: #555;
+      border-left: 3px solid var(--gold);
+      padding-left: 10px;
+      line-height: 1.6;
+    }
+
+    /* リンク */
+    .card-links {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 10px;
+      flex-wrap: wrap;
+    }
+    .card-links a {
+      font-size: .75rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      transition: background .15s, color .15s;
+    }
+    .card-links a:hover {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+
+    /* 日付 */
+    .card-date {
+      font-size: .7rem;
+      color: #bbb;
+      text-align: right;
+    }
+
+    /* ローディング */
+    #loading {
+      text-align: center;
+      padding: 60px;
+      color: var(--muted);
+      font-family: 'Noto Serif JP', serif;
+      letter-spacing: .1em;
+    }
+    #loading::after {
+      content: '';
+      display: block;
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      margin: 16px auto 0;
+      animation: spin .9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    #error {
+      display: none;
+      text-align: center;
+      padding: 60px;
+      color: var(--accent);
+    }
+
+    @media (max-width: 480px) {
+      #grid { grid-template-columns: 1fr; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      #count { margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>手土産帖</h1>
+  <p>MY TEMIYAGE REVIEW</p>
+</header>
+
+<div class="toolbar">
+  <label>
+    用途
+    <select id="filter-use">
+      <option value="">すべて</option>
+    </select>
+  </label>
+  <label>
+    並び替え
+    <select id="sort">
+      <option value="date">更新日 新しい順</option>
+      <option value="score">総合スコア 高い順</option>
+      <option value="price_asc">金額 安い順</option>
+      <option value="price_desc">金額 高い順</option>
+    </select>
+  </label>
+  <label>
+    キーワード
+    <input type="text" id="search" placeholder="商品名・店舗名…" />
+  </label>
+  <span id="count"></span>
+</div>
+
+<main>
+  <div id="loading">データを読み込み中</div>
+  <div id="error">データの取得に失敗しました。<br>GAS URLまたはスプレッドシートの公開設定を確認してください。</div>
+  <div id="grid"></div>
+</main>
+
+<script>
+  // ========== 設定 ==========
+  const GAS_URL = 'https://script.google.com/macros/s/AKfycbyqizASUuJLOyIz6ObYRDUzObBITZHCvrD800HRYBJsqHTIV3TcPwaonYEyzgA1qLxJ/exec';
+  // ==========================
+
+  let allItems = [];
+
+  async function loadData() {
+    try {
+      const res = await fetch(GAS_URL, { redirect: 'follow' });
+      if (!res.ok) throw new Error('fetch failed');
+      const data = await res.json();
+      allItems = data;
+      buildFilters(data);
+      render();
+      document.getElementById('loading').style.display = 'none';
+    } catch (e) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+      console.error(e);
+    }
+  }
+
+  function buildFilters(data) {
+    const uses = [...new Set(data.map(d => d['用途（県外お客様へ】'] || d['用途'] || '').trim())].filter(Boolean);
+    const sel = document.getElementById('filter-use');
+    uses.forEach(u => {
+      const opt = document.createElement('option');
+      opt.value = u; opt.textContent = u;
+      sel.appendChild(opt);
+    });
+  }
+
+  function starsHtml(score) {
+    const n = parseFloat(score) || 0;
+    const full = Math.round(n);
+    return '★'.repeat(Math.min(full, 5)) + '☆'.repeat(Math.max(5 - full, 0));
+  }
+
+  function parsePrice(val) {
+    if (!val) return 0;
+    return parseInt(String(val).replace(/[^\d]/g, '')) || 0;
+  }
+
+  function cardHtml(item) {
+    const name    = item['商品名'] || '';
+    const shop    = item['店舗名'] || '';
+    const price   = item['金額'] || '';
+    const imgUrl  = item['画像URL'] || item['画像ＵＲＬ'] || '';
+    const use     = item['用途（県外お客様へ】'] || item['用途'] || '';
+    const comment = item['コメント'] || '';
+    const total   = parseFloat(item['総合（★5つまで）'] || item['総合'] || 0);
+    const taste   = item['味'] || '';
+    const pkg     = item['パッケージ・見た目'] || item['パッケージ・見'] || '';
+    const value   = item['金額(評価)'] || item['金額評価'] || '';
+    const material= item['原材料'] || '';
+    const story   = item['ストーリー性'] || '';
+    const expiry  = item['賞味期限'] || '';
+    const mapUrl  = item['Google Map'] || '';
+    const instaUrl= item['店舗公式'] || '';
+    const date    = item['更新日'] || '';
+
+    const imgPart = imgUrl
+      ? `<img class="card-img" src="${imgUrl}" alt="${name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        + `<div class="card-img-placeholder" style="display:none">🎁</div>`
+      : `<div class="card-img-placeholder">🎁</div>`;
+
+    const subScores = [
+      ['味',         taste],
+      ['パッケージ', pkg],
+      ['価格',       value],
+      ['原材料',     material],
+      ['ストーリー', story],
+      ['賞味期限',   expiry],
+    ].filter(([,v]) => v !== '' && v !== undefined);
+
+    const subHtml = subScores.map(([l, v]) =>
+      `<div class="sub-item"><span>${l}</span><span class="sub-val">${v}</span></div>`
+    ).join('');
+
+    const links = [];
+    if (mapUrl)   links.push(`<a href="${mapUrl}" target="_blank" rel="noopener">📍 Map</a>`);
+    if (instaUrl) links.push(`<a href="${instaUrl}" target="_blank" rel="noopener">📷 公式</a>`);
+
+    return `
+      <div class="card">
+        ${imgPart}
+        <div class="card-body">
+          <div class="card-shop">${shop}</div>
+          <div class="card-name">${name}</div>
+          ${price ? `<div class="card-price">${price}</div>` : ''}
+          ${use   ? `<div class="card-use">${use}</div>` : ''}
+          <div class="score-main">
+            <span class="score-num">${total || '—'}</span>
+            <span class="score-max">/ 5</span>
+            <span class="stars">${total ? starsHtml(total) : ''}</span>
+          </div>
+          ${subHtml ? `<div class="sub-scores">${subHtml}</div>` : ''}
+          ${comment ? `<div class="comment">${comment}</div>` : ''}
+          ${links.length ? `<div class="card-links">${links.join('')}</div>` : ''}
+          ${date ? `<div class="card-date">${date}</div>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function render() {
+    const useFilter = document.getElementById('filter-use').value;
+    const sort      = document.getElementById('sort').value;
+    const keyword   = document.getElementById('search').value.trim().toLowerCase();
+
+    let items = allItems.filter(item => {
+      const use = (item['用途（県外お客様へ】'] || item['用途'] || '').trim();
+      const matchUse = !useFilter || use === useFilter;
+      const text = `${item['商品名']} ${item['店舗名']}`.toLowerCase();
+      const matchKw = !keyword || text.includes(keyword);
+      return matchUse && matchKw;
+    });
+
+    items.sort((a, b) => {
+      if (sort === 'score') return (parseFloat(b['総合（★5つまで）']||b['総合']||0)) - (parseFloat(a['総合（★5つまで）']||a['総合']||0));
+      if (sort === 'price_asc') return parsePrice(a['金額']) - parsePrice(b['金額']);
+      if (sort === 'price_desc') return parsePrice(b['金額']) - parsePrice(a['金額']);
+      return String(b['更新日'] || '').localeCompare(String(a['更新日'] || ''));
+    });
+
+    document.getElementById('grid').innerHTML = items.map(cardHtml).join('');
+    document.getElementById('count').textContent = `${items.length} 件`;
+  }
+
+  document.getElementById('filter-use').addEventListener('change', render);
+  document.getElementById('sort').addEventListener('change', render);
+  document.getElementById('search').addEventListener('input', render);
+
+  loadData();
+</script>
+</body>
+</html>
