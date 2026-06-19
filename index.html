@@ -312,24 +312,39 @@
 
   let allItems = [];
 
-  async function loadData() {
-    try {
-      const res = await fetch(GAS_URL, { redirect: 'follow' });
-      if (!res.ok) throw new Error('fetch failed');
-      const data = await res.json();
+  // JSONP方式でCORSを回避
+  function loadData() {
+    window.__gasCallback = function(data) {
       allItems = data;
       buildFilters(data);
       render();
       document.getElementById('loading').style.display = 'none';
-    } catch (e) {
+    };
+
+    const script = document.createElement('script');
+    script.src = GAS_URL + '?callback=__gasCallback';
+    script.onerror = function() {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('error').style.display = 'block';
-      console.error(e);
-    }
+    };
+
+    // タイムアウト（8秒）
+    const timeout = setTimeout(function() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+    }, 8000);
+
+    const original = window.__gasCallback;
+    window.__gasCallback = function(data) {
+      clearTimeout(timeout);
+      original(data);
+    };
+
+    document.body.appendChild(script);
   }
 
   function buildFilters(data) {
-    const uses = [...new Set(data.map(d => d['用途（県外お客様へ】'] || d['用途'] || '').trim())].filter(Boolean);
+    const uses = [...new Set(data.map(d => (d['用途（県外お客様へ】'] || d['用途'] || '').trim()))].filter(Boolean);
     const sel = document.getElementById('filter-use');
     uses.forEach(u => {
       const opt = document.createElement('option');
@@ -350,26 +365,26 @@
   }
 
   function cardHtml(item) {
-    const name    = item['商品名'] || '';
-    const shop    = item['店舗名'] || '';
-    const price   = item['金額'] || '';
-    const imgUrl  = item['画像URL'] || item['画像ＵＲＬ'] || '';
-    const use     = item['用途（県外お客様へ】'] || item['用途'] || '';
-    const comment = item['コメント'] || '';
-    const total   = parseFloat(item['総合（★5つまで）'] || item['総合'] || 0);
-    const taste   = item['味'] || '';
-    const pkg     = item['パッケージ・見た目'] || item['パッケージ・見'] || '';
-    const value   = item['金額(評価)'] || item['金額評価'] || '';
-    const material= item['原材料'] || '';
-    const story   = item['ストーリー性'] || '';
-    const expiry  = item['賞味期限'] || '';
-    const mapUrl  = item['Google Map'] || '';
-    const instaUrl= item['店舗公式'] || '';
-    const date    = item['更新日'] || '';
+    const name     = item['商品名'] || '';
+    const shop     = item['店舗名'] || '';
+    const price    = item['金額'] || '';
+    const imgUrl   = item['画像URL'] || item['画像ＵＲＬ'] || '';
+    const use      = item['用途（県外お客様へ】'] || item['用途'] || '';
+    const comment  = item['コメント'] || '';
+    const total    = parseFloat(item['総合（★5つまで）'] || item['総合'] || 0);
+    const taste    = item['味'] || '';
+    const pkg      = item['パッケージ・見た目'] || item['パッケージ・見'] || '';
+    const value    = item['金額(評価)'] || item['金額評価'] || '';
+    const material = item['原材料'] || '';
+    const story    = item['ストーリー性'] || '';
+    const expiry   = item['賞味期限'] || '';
+    const mapUrl   = item['Google Map'] || '';
+    const instaUrl = item['店舗公式'] || '';
+    const date     = item['更新日'] || '';
 
     const imgPart = imgUrl
-      ? `<img class="card-img" src="${imgUrl}" alt="${name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-        + `<div class="card-img-placeholder" style="display:none">🎁</div>`
+      ? `<img class="card-img" src="${imgUrl}" alt="${name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">` +
+        `<div class="card-img-placeholder" style="display:none">🎁</div>`
       : `<div class="card-img-placeholder">🎁</div>`;
 
     const subScores = [
@@ -379,7 +394,7 @@
       ['原材料',     material],
       ['ストーリー', story],
       ['賞味期限',   expiry],
-    ].filter(([,v]) => v !== '' && v !== undefined);
+    ].filter(([, v]) => v !== '' && v !== undefined && v !== null);
 
     const subHtml = subScores.map(([l, v]) =>
       `<div class="sub-item"><span>${l}</span><span class="sub-val">${v}</span></div>`
@@ -395,17 +410,17 @@
         <div class="card-body">
           <div class="card-shop">${shop}</div>
           <div class="card-name">${name}</div>
-          ${price ? `<div class="card-price">${price}</div>` : ''}
-          ${use   ? `<div class="card-use">${use}</div>` : ''}
+          ${price   ? `<div class="card-price">${price}</div>` : ''}
+          ${use     ? `<div class="card-use">${use}</div>` : ''}
           <div class="score-main">
             <span class="score-num">${total || '—'}</span>
             <span class="score-max">/ 5</span>
             <span class="stars">${total ? starsHtml(total) : ''}</span>
           </div>
-          ${subHtml ? `<div class="sub-scores">${subHtml}</div>` : ''}
-          ${comment ? `<div class="comment">${comment}</div>` : ''}
+          ${subHtml  ? `<div class="sub-scores">${subHtml}</div>` : ''}
+          ${comment  ? `<div class="comment">${comment}</div>` : ''}
           ${links.length ? `<div class="card-links">${links.join('')}</div>` : ''}
-          ${date ? `<div class="card-date">${date}</div>` : ''}
+          ${date     ? `<div class="card-date">${date}</div>` : ''}
         </div>
       </div>`;
   }
@@ -424,13 +439,15 @@
     });
 
     items.sort((a, b) => {
-      if (sort === 'score') return (parseFloat(b['総合（★5つまで）']||b['総合']||0)) - (parseFloat(a['総合（★5つまで）']||a['総合']||0));
-      if (sort === 'price_asc') return parsePrice(a['金額']) - parsePrice(b['金額']);
+      if (sort === 'score')      return (parseFloat(b['総合（★5つまで）'] || b['総合'] || 0)) - (parseFloat(a['総合（★5つまで）'] || a['総合'] || 0));
+      if (sort === 'price_asc')  return parsePrice(a['金額']) - parsePrice(b['金額']);
       if (sort === 'price_desc') return parsePrice(b['金額']) - parsePrice(a['金額']);
       return String(b['更新日'] || '').localeCompare(String(a['更新日'] || ''));
     });
 
-    document.getElementById('grid').innerHTML = items.map(cardHtml).join('');
+    document.getElementById('grid').innerHTML = items.length
+      ? items.map(cardHtml).join('')
+      : '<p style="color:var(--muted);padding:40px;text-align:center">該当する商品がありません</p>';
     document.getElementById('count').textContent = `${items.length} 件`;
   }
 
